@@ -61,4 +61,8 @@ model Fav {
   updatedAt DateTime @updatedAt
   Token     Token?   @relation(fields: [tokenId], references: [id])
   tokenId   Int?
+
+  @@index([userId])
+  @@index([productId])
+  @@index([tokenId])
 }
