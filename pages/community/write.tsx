@@ -4,6 +4,7 @@ import Layout from "@/components/layout";
 import TextArea from "@/components/textarea";
 import { useForm } from "react-hook-form";
 import useMutation from "@/libs/client/useMutation";
+import useCoords from "@/libs/client/useCoords";
 import { useEffect } from "react";
 import { Post } from "@prisma/client";
 import { useRouter } from "next/router";
@@ -21,9 +22,11 @@ const Write: NextPage = () => {
   const router = useRouter();
   const { register, handleSubmit } = useForm<WriteForm>();
   const [post, { loading, data }] = useMutation<WriteResponse>("/api/posts");
+  const { latitude, longitude } = useCoords();
+
   const onValid = (data: WriteForm) => {
     if (loading) return;
-    post(data);
+    post({ ...data, latitude, longitude });
   };
   useEffect(() => {
     if (data && data.ok) {
