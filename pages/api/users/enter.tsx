@@ -1,9 +1,14 @@
 import client from "@/libs/server/client";
 import withHandler, { ResponseType } from "@/libs/server/withHandler";
 import { NextApiRequest, NextApiResponse } from "next";
-import twilio from "twilio";
+import mail from "@sendgrid/mail";
 
-const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+mail.setApiKey(process.env.SENDGRID_KEY!);
+
+const twilioClient = require("twilio")(
+  process.env.TWILIO_SID,
+  process.env.TWILIO_TOKEN
+);
 
 async function handler(
   req: NextApiRequest,
@@ -30,11 +35,21 @@ async function handler(
     },
   });
   if (phone) {
-    await twilioClient.messages.create({
+    const message = await twilioClient.messages.create({
       messagingServiceSid: process.env.TWILIO_MSID,
-      to: process.env.PHONE_NUMBER!,
+      to: process.env.MY_PHONE!,
       body: `Your login token is ${payload}.`,
     });
+    console.log(message);
+  } else if (email) {
+    const email = await mail.send({
+      from: "yosephchong0524@gmail.com",
+      to: "yosephchong0524@gmail.com",
+      subject: " Verification Email",
+      text: `Your login token is ${payload}.`,
+      html: `<strong> Your token in ${payload}</strong>`,
+    });
+    console.log(email);
   }
 
   return res.json({
