@@ -1,11 +1,12 @@
 import type { NextPage } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../components/button";
 import Input from "../components/input";
 import { cls } from "../libs/client/utils";
 import useMutation from "@/libs/client/useMutation";
 import { Token } from "@prisma/client";
+import { useRouter } from "next/router";
 
 interface EnterForm {
   email?: string;
@@ -45,6 +46,12 @@ const Enter: NextPage = () => {
     if (tokenLoading) return;
     confirmToken(validForm);
   };
+  const router = useRouter();
+  useEffect(() => {
+    if (tokenData?.ok) {
+      router.push("/");
+    }
+  }, [tokenData, router]);
   console.log(data);
 
   return (
