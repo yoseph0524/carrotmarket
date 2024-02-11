@@ -7,7 +7,10 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseType>
 ) {
-  const { id } = req.query;
+  const {
+    query: { id },
+    session: { user },
+  } = req;
 
   if (id === undefined) {
     // Handle the case where id is undefined, for example, return an error response
@@ -16,44 +19,41 @@ async function handler(
       ok: false,
     });
   }
-  const product = await client.product.findUnique({
+  const alreadyExists = await client.fav.findFirst({
     where: {
-      id: +id.toString(),
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          avatar: true,
-        },
-      },
+      productId: +id?.toString(),
+      userId: user?.id,
     },
   });
 
-  const terms = product?.name.split(" ").map((word) => ({
-    name: {
-      contains: word,
-    },
-  }));
-  const relatedProducts = await client.product.findMany({
-    where: {
-      OR: terms,
-      AND: {
-        id: {
-          not: product?.id,
+  if (alreadyExists) {
+    await client.fav.delete({
+      where: {
+        id: alreadyExists.id,
+      },
+    });
+  } else {
+    await client.fav.create({
+      data: {
+        user: {
+          connect: {
+            id: user?.id,
+          },
+        },
+        product: {
+          connect: {
+            id: +id?.toString(),
+          },
         },
       },
-    },
-  });
-  console.log(relatedProducts);
-
-  res.json({ ok: true, product });
+    });
+  }
+  res.json({ ok: true });
 }
 
 export default withApiSession(
   withHandler({
-    methods: ["GET"],
+    methods: ["POST"],
     handler,
   })
 );
