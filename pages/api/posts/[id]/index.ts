@@ -9,6 +9,7 @@ async function handler(
 ) {
   const {
     query: { id },
+    session: { user },
   } = req;
   if (id === undefined) {
     // Handle the case where id is undefined, for example, return an error response
@@ -50,9 +51,21 @@ async function handler(
       },
     },
   });
+  const isWondering = Boolean(
+    await client.wondering.findFirst({
+      where: {
+        postId: +id.toString(),
+        userId: user?.id,
+      },
+      select: {
+        id: true,
+      },
+    })
+  );
   res.json({
     ok: true,
     post,
+    isWondering,
   });
 }
 
